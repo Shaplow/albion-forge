@@ -74,5 +74,5 @@ export interface TierResult {
   tier: Tier;
   slots: SlotResult[];
   totalMats: { runes: number; souls: number; relics: number };
-  totals: Record<Enchant, { market: number; craft: number; available: boolean; totalIP: number; avgIP: number }>;
+  totals: Record<Enchant, { market: number; craft: number; available: boolean; craftComplete: boolean; totalIP: number; avgIP: number }>;
 }

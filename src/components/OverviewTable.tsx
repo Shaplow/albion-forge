@@ -23,8 +23,8 @@ interface CellData {
   market: number;
   craft: number;
   best: number;
-  craftBetter: boolean;
-  available: boolean;
+  label: 'enchant' | 'direct' | null;
+  available: boolean; // best comes from complete data
 }
 
 export default function OverviewTable({ tierResults }: Props) {
@@ -35,12 +35,30 @@ export default function OverviewTable({ tierResults }: Props) {
     for (const enchant of ENCHANTS) {
       const t = result.totals[enchant];
       const ip = t.avgIP;
-      const available = t.available;
-      const craftBetter = t.craft > 0 && t.market > 0 && t.craft < t.market;
-      const best = t.craft > 0 && t.market > 0
-        ? Math.min(t.market, t.craft)
-        : t.market || t.craft;
-      cells.push({ tier: result.tier, enchant, ip, market: t.market, craft: t.craft, best, craftBetter, available });
+      // A market total is only reliable if ALL items have a direct price
+      const marketOk = t.available && t.market > 0;
+      // A craft total is only reliable if ALL items have a craft cost (n/a for .0)
+      const craftOk = t.craftComplete && t.craft > 0;
+
+      let best: number;
+      let label: 'enchant' | 'direct' | null;
+      let available: boolean;
+
+      if (marketOk && craftOk) {
+        if (t.craft <= t.market) { best = t.craft; label = 'enchant'; }
+        else                     { best = t.market; label = 'direct'; }
+        available = true;
+      } else if (marketOk) {
+        best = t.market; label = enchant === 0 ? null : 'direct'; available = true;
+      } else if (craftOk) {
+        // Market is incomplete — use enchant cost as the reliable figure
+        best = t.craft; label = 'enchant'; available = true;
+      } else {
+        // Neither complete: show whatever partial data we have with ≈
+        best = t.market || t.craft; label = null; available = false;
+      }
+
+      cells.push({ tier: result.tier, enchant, ip, market: t.market, craft: t.craft, best, label, available });
     }
   }
 
@@ -88,9 +106,9 @@ export default function OverviewTable({ tierResults }: Props) {
                             {!c.available && <span className="text-gray-500 mr-0.5 font-normal text-xs" title="Coût incomplet — prix manquants pour certains items">≈</span>}
                             {fmt(c.best)}
                           </span>
-                          {c.craftBetter ? (
+                          {c.label === 'enchant' ? (
                             <span className="text-green-500 text-[9px] leading-none">enchant</span>
-                          ) : c.craft > 0 && c.market > 0 ? (
+                          ) : c.label === 'direct' ? (
                             <span className="text-gray-600 text-[9px] leading-none">direct</span>
                           ) : null}
                         </div>

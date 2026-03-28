@@ -221,7 +221,8 @@ export default function TierTable({ result, lang, priceOverrides, onPriceOverrid
               })()}
               {([1, 2, 3] as Enchant[]).map((e) => {
                 const t = result.totals[e];
-                const eco = t.market > 0 && t.craft > 0 ? t.market - t.craft : 0;
+                // Only compute economy when market is complete; partial market would give misleading numbers
+                const eco = t.available && t.market > 0 && t.craft > 0 ? t.market - t.craft : 0;
                 return (
                   <Fragment key={e}>
                     <td className="px-2 py-2.5 text-center border-l border-albion-border text-gray-200">

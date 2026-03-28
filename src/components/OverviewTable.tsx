@@ -50,7 +50,7 @@ export default function OverviewTable({ tierResults }: Props) {
         else                     { best = t.market; label = 'direct'; }
         available = true;
       } else if (marketOk) {
-        best = t.market; label = enchant === 0 ? null : 'direct'; available = true;
+        best = t.market; label = 'direct'; available = true;
       } else if (craftOk) {
         // Market is incomplete — use enchant cost as the reliable figure
         best = t.craft; label = 'enchant'; available = true;
@@ -61,7 +61,7 @@ export default function OverviewTable({ tierResults }: Props) {
           else                     { best = t.market; label = 'direct'; }
         } else {
           best = t.market || t.craft;
-          label = enchant === 0 ? null : t.craft > 0 ? 'enchant' : t.market > 0 ? 'direct' : null;
+          label = t.craft > 0 ? 'enchant' : t.market > 0 ? 'direct' : null;
         }
         available = false;
       }

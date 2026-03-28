@@ -184,17 +184,18 @@ export function calcTierResult(
     let market = 0, craft = 0, totalIP = 0, avgIPSum = 0;
     let available = true;
     let craftComplete = enchant > 0; // .0 has no enchant cost, always false
+    let missingMarket = 0;
     for (const slot of slots) {
       const e = slot.enchants[enchant];
       market += e.marketPrice;
       craft += e.craftCost;
       totalIP += e.ip;
       if (AVERAGE_IP_SLOT_IDS.includes(slot.slotId)) avgIPSum += e.ip;
-      if (!e.available) available = false;
+      if (!e.available) { available = false; missingMarket++; }
       if (enchant > 0 && e.craftCost === 0) craftComplete = false;
     }
     const avgIP = avgIPSlotCount > 0 ? Math.round(avgIPSum / avgIPSlotCount) : 0;
-    totals[enchant] = { market, craft, available, craftComplete, totalIP, avgIP };
+    totals[enchant] = { market, craft, available, craftComplete, missingMarket, totalIP, avgIP };
   }
 
   return { tier, slots, totalMats, totals };

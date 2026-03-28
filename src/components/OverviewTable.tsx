@@ -25,6 +25,7 @@ interface CellData {
   best: number;
   label: 'enchant' | 'direct' | null;
   available: boolean; // best comes from complete data
+  missingMarket: number;
 }
 
 export default function OverviewTable({ tierResults }: Props) {
@@ -58,7 +59,7 @@ export default function OverviewTable({ tierResults }: Props) {
         best = t.market || t.craft; label = null; available = false;
       }
 
-      cells.push({ tier: result.tier, enchant, ip, market: t.market, craft: t.craft, best, label, available });
+      cells.push({ tier: result.tier, enchant, ip, market: t.market, craft: t.craft, best, label, available, missingMarket: t.missingMarket });
     }
   }
 
@@ -103,7 +104,6 @@ export default function OverviewTable({ tierResults }: Props) {
                         <div className="inline-flex flex-col items-center gap-0.5 rounded-md px-3 py-1.5">
                           <span className="text-gray-500 text-[10px] leading-none">{c.ip.toLocaleString('fr-FR')} IP</span>
                           <span className="font-semibold text-sm leading-none text-gray-200">
-                            {!c.available && <span className="text-gray-500 mr-0.5 font-normal text-xs" title="Coût incomplet — prix manquants pour certains items">≈</span>}
                             {fmt(c.best)}
                           </span>
                           {c.label === 'enchant' ? (
@@ -111,6 +111,14 @@ export default function OverviewTable({ tierResults }: Props) {
                           ) : c.label === 'direct' ? (
                             <span className="text-gray-600 text-[9px] leading-none">direct</span>
                           ) : null}
+                          {c.missingMarket > 0 && (
+                            <span
+                              className="mt-0.5 text-[9px] leading-none text-amber-500/80 flex items-center gap-0.5"
+                              title={`${c.missingMarket} item${c.missingMarket > 1 ? 's' : ''} sans prix direct`}
+                            >
+                              ⚠ {c.missingMarket} manquant{c.missingMarket > 1 ? 's' : ''}
+                            </span>
+                          )}
                         </div>
                       ) : (
                         <span className="text-gray-700">—</span>

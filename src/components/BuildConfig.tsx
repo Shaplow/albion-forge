@@ -23,10 +23,13 @@ const SLOT_GRID: (SlotId | null)[] = [
 interface SpecSliderProps {
   spec: number;
   onChange: (v: number) => void;
+  crossSpec: number | undefined;
+  onCrossSpecChange: (v: number | undefined) => void;
+  globalCrossSpec: number;
   onClose: () => void;
 }
 
-function SpecSlider({ spec, onChange, onClose }: SpecSliderProps) {
+function SpecSlider({ spec, onChange, crossSpec, onCrossSpecChange, globalCrossSpec, onClose }: SpecSliderProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,6 +64,34 @@ function SpecSlider({ spec, onChange, onClose }: SpecSliderProps) {
         <span>0</span>
         <span>120</span>
       </div>
+
+      {/* Cross-spec override */}
+      <div className="mt-3 pt-3 border-t border-albion-border">
+        <div className="flex justify-between items-center mb-1.5">
+          <span className="text-[10px] text-gray-400 uppercase tracking-wide">Spec croisé</span>
+          {crossSpec !== undefined && (
+            <button
+              onClick={() => onCrossSpecChange(undefined)}
+              className="text-[9px] text-gray-500 hover:text-red-400 transition-colors"
+              title="Réinitialiser (utiliser la valeur globale)"
+            >
+              ✕ reset
+            </button>
+          )}
+        </div>
+        <input
+          type="number"
+          min={0}
+          value={crossSpec ?? ''}
+          placeholder={`${globalCrossSpec} (global)`}
+          onChange={(e) => {
+            const v = e.target.value === '' ? undefined : Math.max(0, Number(e.target.value));
+            onCrossSpecChange(v);
+          }}
+          className="w-full bg-albion-dark border border-albion-border text-gray-100 text-sm rounded px-2 py-1 text-center focus:outline-none focus:border-albion-gold"
+          style={{ fontSize: 11 }}
+        />
+      </div>
     </div>
   );
 }
@@ -72,12 +103,15 @@ interface SlotCardProps {
   selected: SelectedItems;
   is2H: boolean;
   spec: number;
+  crossSpec: number | undefined;
+  globalCrossSpec: number;
   lang: 'en' | 'fr';
   onOpenPicker: (slotId: SlotId) => void;
   onSpecChange: (spec: number) => void;
+  onCrossSpecChange: (v: number | undefined) => void;
 }
 
-function SlotCard({ slotId, selected, is2H, spec, lang, onOpenPicker, onSpecChange }: SlotCardProps) {
+function SlotCard({ slotId, selected, is2H, spec, crossSpec, globalCrossSpec, lang, onOpenPicker, onSpecChange, onCrossSpecChange }: SlotCardProps) {
   const [tierIdx, setTierIdx] = useState(0);
   const [imgFailed, setImgFailed] = useState(false);
   const [showSlider, setShowSlider] = useState(false);
@@ -109,6 +143,9 @@ function SlotCard({ slotId, selected, is2H, spec, lang, onOpenPicker, onSpecChan
         <SpecSlider
           spec={spec}
           onChange={onSpecChange}
+          crossSpec={crossSpec}
+          onCrossSpecChange={onCrossSpecChange}
+          globalCrossSpec={globalCrossSpec}
           onClose={() => setShowSlider(false)}
         />
       )}
@@ -216,11 +253,11 @@ function SlotCard({ slotId, selected, is2H, spec, lang, onOpenPicker, onSpecChan
       {hasItem && !isConsumable && isCombatSlot && (
         <button
           onClick={(e) => { e.stopPropagation(); setShowSlider((v) => !v); }}
-          title={`Spécialisation : ${spec} (cliquer pour modifier)`}
+          title={`Spéc: ${spec} / Cross: ${crossSpec !== undefined ? crossSpec : `${globalCrossSpec} (global)`} — cliquer pour modifier`}
           className="absolute bottom-[22px] left-0.5 text-[9px] font-bold px-1 py-0.5 rounded-sm transition-colors hover:text-white"
-          style={{ color: '#6b7280', background: 'rgba(0,0,0,0.75)' }}
+          style={{ color: crossSpec !== undefined ? '#c8a84b' : '#6b7280', background: 'rgba(0,0,0,0.75)' }}
         >
-          {spec}
+          {spec}{crossSpec !== undefined ? ` ·${crossSpec}` : ''}
         </button>
       )}
 
@@ -245,12 +282,15 @@ interface Props {
   selected: SelectedItems;
   is2H: boolean;
   specLevels: Partial<Record<SlotId, number>>;
+  otherSpecBonuses: Partial<Record<SlotId, number>>;
+  globalOtherSpec: number;
   lang: 'en' | 'fr';
   onChange: (slotId: SlotId, itemId: string) => void;
   onSpecChange: (slotId: SlotId, spec: number) => void;
+  onOtherSpecChange: (slotId: SlotId, v: number | undefined) => void;
 }
 
-export default function BuildConfig({ selected, is2H, specLevels, lang, onChange, onSpecChange }: Props) {
+export default function BuildConfig({ selected, is2H, specLevels, otherSpecBonuses, globalOtherSpec, lang, onChange, onSpecChange, onOtherSpecChange }: Props) {
   const [pickerSlot, setPickerSlot] = useState<SlotId | null>(null);
 
   return (
@@ -269,9 +309,12 @@ export default function BuildConfig({ selected, is2H, specLevels, lang, onChange
               selected={selected}
               is2H={is2H}
               spec={specLevels[slotId] ?? 100}
+              crossSpec={otherSpecBonuses[slotId]}
+              globalCrossSpec={globalOtherSpec}
               lang={lang}
               onOpenPicker={setPickerSlot}
               onSpecChange={(v) => onSpecChange(slotId, v)}
+              onCrossSpecChange={(v) => onOtherSpecChange(slotId, v)}
             />
           ),
         )}

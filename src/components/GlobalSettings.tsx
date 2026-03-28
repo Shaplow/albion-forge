@@ -77,9 +77,9 @@ export default function GlobalSettingsBar({ settings, onChange }: Props) {
       <div className="flex items-center gap-2">
         <label
           className="text-xs text-gray-400 uppercase tracking-wide"
-          title="Dans ton arbre de spé, clique sur chaque nœud de ta branche (sauf ton item principal) — le jeu affiche directement le bonus IP qu'il donne aux autres items. Additionne tous ces bonus et entre le total ici."
+          title="Valeur par défaut appliquée à tous les slots combat. Pour un slot spécifique (ex: arme dans une sous-branche différente), clique sur le badge de spé du slot pour définir sa propre valeur. La valeur à entrer est la somme des contributions brutes affichées dans le destiny board pour chaque nœud des autres items de ta branche."
         >
-          Bonus autres specs
+          Spec croisé (défaut)
         </label>
         <input
           type="number"

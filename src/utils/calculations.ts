@@ -35,11 +35,11 @@ export const QUALITY_LABELS: Record<number, string> = {
 
 /**
  * Compute the spec IP bonus for a given slot.
- * bonusBrut = mastery × 0.2 + spec × 2 + otherSpecBonus
+ * bonusBrut = mastery × 0.2 + spec × 1 + otherSpecBonus
  * final = floor(bonusBrut × TIER_MULTIPLIER[tier])
  */
 export function calcSpecIP(mastery: number, spec: number, tier: Tier, otherSpecBonus = 0): number {
-  const raw = mastery * 0.2 + spec * 2 + otherSpecBonus;
+  const raw = mastery * 0.2 + spec + otherSpecBonus;
   return Math.floor(raw * TIER_MULTIPLIER[tier]);
 }
 
@@ -144,6 +144,7 @@ export function calcTierResult(
   tier: Tier,
   prices: PriceMap,
   otherSpecBonus = 0,
+  otherSpecBonuses: Partial<Record<SlotId, number>> = {},
   qualityFallbackIds: Set<string> = new Set(),
 ): TierResult {
   const slots: SlotResult[] = [];
@@ -159,7 +160,8 @@ export function calcTierResult(
     const spec = specLevels[slotId] ?? 100;
     const isCombat = COMBAT_SPEC_SLOT_IDS.includes(slotId);
 
-    const { matCount, enchants } = calcSlotTier(slotId, baseId, tier, is2H, isCombat ? mastery : 0, isCombat ? spec : 0, quality, prices, isCombat ? otherSpecBonus : 0, qualityFallbackIds);
+    const slotCrossBonus = isCombat ? (otherSpecBonuses[slotId] ?? otherSpecBonus) : 0;
+    const { matCount, enchants } = calcSlotTier(slotId, baseId, tier, is2H, isCombat ? mastery : 0, isCombat ? spec : 0, quality, prices, slotCrossBonus, qualityFallbackIds);
 
     slots.push({
       slotId,
@@ -209,10 +211,11 @@ export function calcAllTiers(
   specLevels: Partial<Record<SlotId, number>>,
   prices: PriceMap,
   otherSpecBonus = 0,
+  otherSpecBonuses: Partial<Record<SlotId, number>> = {},
   qualityFallbackIds: Set<string> = new Set(),
 ): TierResult[] {
   if (Object.keys(selectedItems).length === 0) return [];
   return TIERS.map((tier) =>
-    calcTierResult(selectedItems, is2H, mastery, quality, specLevels, tier, prices, otherSpecBonus, qualityFallbackIds),
+    calcTierResult(selectedItems, is2H, mastery, quality, specLevels, tier, prices, otherSpecBonus, otherSpecBonuses, qualityFallbackIds),
   );
 }

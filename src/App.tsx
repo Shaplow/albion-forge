@@ -49,12 +49,13 @@ export default function App() {
   }));
   const [selectedItems, setSelectedItems] = useState<SelectedItems>(saved?.selectedItems ?? {});
   const [specLevels, setSpecLevels] = useState<Partial<Record<SlotId, number>>>(saved?.specLevels ?? {});
+  const [otherSpecBonuses, setOtherSpecBonuses] = useState<Partial<Record<SlotId, number>>>(saved?.otherSpecBonuses ?? {});
   const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>(saved?.priceOverrides ?? {});
   const [activeTab, setActiveTab] = useState<TabId>('resultats');
 
   // Persist session to localStorage on every relevant change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ settings, selectedItems, specLevels, priceOverrides }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ settings, selectedItems, specLevels, otherSpecBonuses, priceOverrides }));
   }, [settings, selectedItems, specLevels, priceOverrides]);
 
   const handleReset = () => {
@@ -62,6 +63,7 @@ export default function App() {
     setSettings(DEFAULT_SETTINGS);
     setSelectedItems({});
     setSpecLevels({});
+    setOtherSpecBonuses({});
     setPriceOverrides({});
   };
 
@@ -84,6 +86,15 @@ export default function App() {
 
   const handleSpecChange = (slotId: SlotId, spec: number) => {
     setSpecLevels((prev) => ({ ...prev, [slotId]: spec }));
+  };
+
+  const handleOtherSpecChange = (slotId: SlotId, v: number | undefined) => {
+    setOtherSpecBonuses((prev) => {
+      const next = { ...prev };
+      if (v === undefined) delete next[slotId];
+      else next[slotId] = v;
+      return next;
+    });
   };
 
   const itemIds = useMemo(
@@ -114,8 +125,8 @@ export default function App() {
   };
 
   const tierResults = useMemo(
-    () => calcAllTiers(selectedItems, is2H, settings.mastery, settings.quality, specLevels, effectivePrices, settings.otherSpecBonus, qualityFallbackIds),
-    [selectedItems, is2H, settings.mastery, settings.quality, specLevels, effectivePrices, settings.otherSpecBonus, qualityFallbackIds],
+    () => calcAllTiers(selectedItems, is2H, settings.mastery, settings.quality, specLevels, effectivePrices, settings.otherSpecBonus, otherSpecBonuses, qualityFallbackIds),
+    [selectedItems, is2H, settings.mastery, settings.quality, specLevels, effectivePrices, settings.otherSpecBonus, otherSpecBonuses, qualityFallbackIds],
   );
 
   // Consumables: single price lookup (full IDs like T5_MEAL_OMELETTE)
@@ -221,9 +232,12 @@ export default function App() {
             selected={selectedItems}
             is2H={is2H}
             specLevels={specLevels}
+            otherSpecBonuses={otherSpecBonuses}
+            globalOtherSpec={settings.otherSpecBonus}
             lang={settings.lang}
             onChange={handleItemChange}
             onSpecChange={handleSpecChange}
+            onOtherSpecChange={handleOtherSpecChange}
           />
         </div>
 

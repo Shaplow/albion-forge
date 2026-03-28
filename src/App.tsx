@@ -216,7 +216,7 @@ export default function App() {
       <div className="max-w-[1600px] mx-auto px-4 py-4 space-y-4">
 
         {/* Build config — always visible */}
-        <div className="flex justify-center">
+        <div className="flex justify-center py-2">
           <BuildConfig
             selected={selectedItems}
             is2H={is2H}
@@ -234,27 +234,17 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab bar — centered, modern */}
+        {/* Tab bar + légende — centré, épuré */}
         {(hasEquipment || consumableSlots.length > 0) && (
-          <div className="flex flex-col items-center gap-3">
-            {/* Help tooltip row */}
-            <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-gray-600">
-              <span><span className="text-green-500 font-medium">enchant</span> = acheter le .0 et enchanter coûte moins cher</span>
-              <span className="text-gray-700">·</span>
-              <span><span className="text-gray-400 font-medium">direct</span> = acheter l'item déjà enchanté est préférable</span>
-              <span className="text-gray-700">·</span>
-              <span><span className="text-yellow-600">↓</span> = qualité indisponible, prix d'une qualité inférieure utilisé</span>
-              <span className="text-gray-700">·</span>
-              <span>Prix manquant ? <span className="text-gray-400">clic sur le prix</span> dans les détails pour le saisir manuellement</span>
-            </div>
+          <div className="flex flex-col items-center gap-5 py-4">
 
-            {/* Tab pills */}
-            <nav className="flex items-center gap-1 bg-albion-dark/60 border border-albion-border rounded-full px-1.5 py-1">
+            {/* Pills de navigation */}
+            <nav className="flex items-center gap-1 bg-albion-dark/60 border border-albion-border rounded-full px-1.5 py-1 shadow-sm">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`px-6 py-2 rounded-full text-xs font-medium transition-all ${
                     activeTab === tab.id
                       ? 'bg-albion-gold/15 text-albion-gold border border-albion-gold/30'
                       : 'text-gray-500 hover:text-gray-200'
@@ -264,13 +254,25 @@ export default function App() {
                 </button>
               ))}
             </nav>
+
+            {/* Légende / aide */}
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1.5 text-[11px] text-gray-600">
+              <span><span className="text-green-500 font-medium">enchant</span> = acheter le .0 et enchanter coûte moins cher</span>
+              <span className="text-gray-700 hidden sm:inline">·</span>
+              <span><span className="text-gray-400 font-medium">direct</span> = acheter l'item déjà enchanté est préférable</span>
+              <span className="text-gray-700 hidden sm:inline">·</span>
+              <span><span className="text-yellow-600 font-bold">↓</span> = qualité inférieure utilisée (prix demandé indisponible)</span>
+              <span className="text-gray-700 hidden sm:inline">·</span>
+              <span>Prix manquant ? <span className="text-gray-500 underline underline-offset-2 decoration-dotted">cliquer sur le prix</span> dans les détails pour le corriger</span>
+            </div>
+
           </div>
         )}
 
         {/* Tab content */}
         {/* 📊 Analyse des coûts */}
         {activeTab === 'resultats' && hasEquipment && (
-          <section className="space-y-3">
+          <section className="space-y-5">
             {isLoading ? (
               <div className="text-center py-12 text-gray-500">
                 <div className="text-2xl mb-2">⟳</div>
@@ -279,7 +281,7 @@ export default function App() {
             ) : (
               <>
                 <OverviewTable tierResults={tierResults} />
-                <h2 className="text-xs text-gray-500 uppercase tracking-widest pt-2">
+                <h2 className="text-xs text-gray-500 uppercase tracking-widest pt-4">
                   Détail par tier
                 </h2>
                 {tierResults.map((result) => (

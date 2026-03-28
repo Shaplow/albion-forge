@@ -77,7 +77,7 @@ export default function GlobalSettingsBar({ settings, onChange }: Props) {
       <div className="flex items-center gap-2">
         <label
           className="text-xs text-gray-400 uppercase tracking-wide"
-          title="Bonus des autres nœuds de la branche. Calcul manuel : Σ(spec non-artifact × 0.2) + Σ(spec artifact × 0.1)"
+          title="Dans ton arbre de spé, clique sur chaque nœud de ta branche (sauf ton item principal) — le jeu affiche directement le bonus IP qu'il donne aux autres items. Additionne tous ces bonus et entre le total ici."
         >
           Bonus autres specs
         </label>

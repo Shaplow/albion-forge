@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { GlobalSettings, SelectedItems, SlotId } from './types';
 import { collectItemIds, buildItemId } from './utils/itemIds';
 import { calcAllTiers } from './utils/calculations';
@@ -8,6 +8,9 @@ import GlobalSettingsBar from './components/GlobalSettings';
 import BuildConfig from './components/BuildConfig';
 import TierTable from './components/TierTable';
 import OverviewTable from './components/OverviewTable';
+import IPTargetTab from './components/IPTargetTab';
+
+type TabId = 'build' | 'resultats' | 'ip-cible' | 'consommables';
 
 const STORAGE_KEY = 'albion-refine-session';
 
@@ -47,6 +50,14 @@ export default function App() {
   const [selectedItems, setSelectedItems] = useState<SelectedItems>(saved?.selectedItems ?? {});
   const [specLevels, setSpecLevels] = useState<Partial<Record<SlotId, number>>>(saved?.specLevels ?? {});
   const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>(saved?.priceOverrides ?? {});
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    const savedItems = (saved?.selectedItems ?? {}) as Record<string, string | undefined>;
+    const hasEquip = Object.keys(savedItems).some(
+      (k) => !CONSUMABLE_SLOT_IDS.includes(k as SlotId) && savedItems[k],
+    );
+    return hasEquip ? 'resultats' : 'build';
+  });
+  const prevHasEquipRef = useRef(false);
 
   // Persist session to localStorage on every relevant change
   useEffect(() => {
@@ -134,6 +145,29 @@ export default function App() {
   );
   const hasItems = Object.keys(selectedItems).some((k) => selectedItems[k as SlotId]);
 
+  const tabs: { id: TabId; icon: string; label: string }[] = [
+    { id: 'build', icon: '⚙', label: 'Configuration' },
+    ...(hasEquipment ? [
+      { id: 'resultats' as TabId, icon: '📊', label: 'Analyse des coûts' },
+      { id: 'ip-cible' as TabId, icon: '🎯', label: 'Objectif IP' },
+    ] : []),
+    ...(consumableSlots.length > 0 ? [
+      { id: 'consommables' as TabId, icon: '🍖', label: 'Consommables' },
+    ] : []),
+  ];
+
+  // Auto-switch to Analyse when equipment is first configured
+  useEffect(() => {
+    if (!prevHasEquipRef.current && hasEquipment) setActiveTab('resultats');
+    prevHasEquipRef.current = hasEquipment;
+  }, [hasEquipment]);
+
+  // Drop back to Build if the active tab becomes unavailable
+  useEffect(() => {
+    if ((activeTab === 'resultats' || activeTab === 'ip-cible') && !hasEquipment) setActiveTab('build');
+    if (activeTab === 'consommables' && consumableSlots.length === 0) setActiveTab('build');
+  }, [activeTab, hasEquipment, consumableSlots.length]);
+
   return (
     <div className="min-h-screen bg-albion-dark">
       {/* Header */}
@@ -186,28 +220,56 @@ export default function App() {
         )}
       </header>
 
-      <div className="max-w-[1600px] mx-auto px-4 py-4 space-y-4">
-        <GlobalSettingsBar settings={settings} onChange={setSettings} />
+      {/* Settings bar + Tab navigation */}
+      <div className="border-b border-albion-border bg-albion-dark/80 sticky top-0 z-10">
+        <div className="max-w-[1600px] mx-auto">
+          <GlobalSettingsBar settings={settings} onChange={setSettings} />
+          <nav className="flex gap-0.5 px-4">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-all ${
+                  activeTab === tab.id
+                    ? 'border-albion-gold text-albion-gold'
+                    : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-albion-border'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
 
-        {/* Build configuration */}
-        <section>
-          <h2 className="text-xs text-gray-500 uppercase tracking-widest mb-3">
-            Configuration du build
-          </h2>
-          <div className="flex justify-center">
-            <BuildConfig
-              selected={selectedItems}
-              is2H={is2H}
-              specLevels={specLevels}
-              lang={settings.lang}
-              onChange={handleItemChange}
-              onSpecChange={handleSpecChange}
-            />
-          </div>
-        </section>
+      {/* Tab content */}
+      <div className="max-w-[1600px] mx-auto px-4 py-4">
 
-        {/* Equipment results */}
-        {hasEquipment && (
+        {/* ⚙ Configuration */}
+        {activeTab === 'build' && (
+          <section>
+            <div className="flex justify-center">
+              <BuildConfig
+                selected={selectedItems}
+                is2H={is2H}
+                specLevels={specLevels}
+                lang={settings.lang}
+                onChange={handleItemChange}
+                onSpecChange={handleSpecChange}
+              />
+            </div>
+            {!hasItems && (
+              <div className="text-center py-16 text-gray-600">
+                <div className="text-4xl mb-3">⚔</div>
+                <p className="text-sm">Clique sur un slot pour sélectionner tes items</p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* 📊 Analyse des coûts */}
+        {activeTab === 'resultats' && (
           <section className="space-y-3">
             {isLoading ? (
               <div className="text-center py-12 text-gray-500">
@@ -234,10 +296,14 @@ export default function App() {
           </section>
         )}
 
-        {/* Consumables */}
-        {consumableSlots.length > 0 && (
+        {/* 🎯 Objectif IP */}
+        {activeTab === 'ip-cible' && (
+          <IPTargetTab tierResults={tierResults} lang={settings.lang} />
+        )}
+
+        {/* 🍖 Consommables */}
+        {activeTab === 'consommables' && (
           <section>
-            <h2 className="text-xs text-gray-500 uppercase tracking-widest mb-2">Consommables</h2>
             <div className="bg-albion-card border border-albion-border rounded-lg overflow-hidden">
               <table className="w-full text-xs text-gray-300 border-collapse">
                 <thead>
@@ -263,12 +329,6 @@ export default function App() {
           </section>
         )}
 
-        {!hasItems && (
-          <div className="text-center py-16 text-gray-600">
-            <div className="text-4xl mb-3">⚔</div>
-            <p className="text-sm">Clique sur un slot pour sélectionner tes items</p>
-          </div>
-        )}
       </div>
     </div>
   );

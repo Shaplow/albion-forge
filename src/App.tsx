@@ -234,9 +234,9 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab bar + légende — centré, épuré */}
+        {/* Tab bar + légende contextuelle — centré, épuré */}
         {(hasEquipment || consumableSlots.length > 0) && (
-          <div className="flex flex-col items-center gap-5 py-4">
+          <div className="flex flex-col items-center gap-4 py-4">
 
             {/* Pills de navigation */}
             <nav className="flex items-center gap-1 bg-albion-dark/60 border border-albion-border rounded-full px-1.5 py-1 shadow-sm">
@@ -255,15 +255,31 @@ export default function App() {
               ))}
             </nav>
 
-            {/* Légende / aide */}
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1.5 text-[11px] text-gray-600">
-              <span><span className="text-green-500 font-medium">enchant</span> = acheter le .0 et enchanter coûte moins cher</span>
-              <span className="text-gray-700 hidden sm:inline">·</span>
-              <span><span className="text-gray-400 font-medium">direct</span> = acheter l'item déjà enchanté est préférable</span>
-              <span className="text-gray-700 hidden sm:inline">·</span>
-              <span><span className="text-yellow-600 font-bold">↓</span> = qualité inférieure utilisée (prix demandé indisponible)</span>
-              <span className="text-gray-700 hidden sm:inline">·</span>
-              <span>Prix manquant ? <span className="text-gray-500 underline underline-offset-2 decoration-dotted">cliquer sur le prix</span> dans les détails pour le corriger</span>
+            {/* Légende contextuelle selon l'onglet */}
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[11px] text-gray-600 min-h-[1.5rem]">
+              {activeTab === 'resultats' && (<>
+                <span><span className="text-green-500 font-medium">enchant</span> = acheter le .0 et enchanter coûte moins cher</span>
+                <span className="text-gray-700">·</span>
+                <span><span className="text-gray-400 font-medium">direct</span> = acheter l'item déjà enchanté est préférable</span>
+                <span className="text-gray-700">·</span>
+                <span><span className="text-yellow-600 font-bold">↓</span> = prix d'une qualité inférieure (qualité demandée indisponible)</span>
+                <span className="text-gray-700">·</span>
+                <span><span className="text-amber-500/80">⚠ N manquants</span> = items sans prix direct, total partiel</span>
+                <span className="text-gray-700">·</span>
+                <span>Prix absent ? <span className="text-gray-500 underline underline-offset-2 decoration-dotted cursor-help">cliquer sur la cellule</span> dans le détail pour le saisir</span>
+              </>)}
+              {activeTab === 'ip-cible' && (<>
+                <span>Entre l'<span className="text-albion-gold font-medium">IP moyen cible</span> et l'algo trouve la combo tier·enchant la moins chère pour l'atteindre</span>
+                <span className="text-gray-700">·</span>
+                <span>Bag &amp; cape <span className="text-gray-500">ne comptent pas</span> dans l'IP moyen — laissés au moins cher</span>
+                <span className="text-gray-700">·</span>
+                <span>Optimisation basée sur les prix disponibles — saisir des prix manquants dans <span className="text-gray-500 underline underline-offset-2 decoration-dotted">Analyse des coûts</span> améliore les résultats</span>
+              </>)}
+              {activeTab === 'consommables' && (<>
+                <span>Prix récupérés en <span className="text-gray-400 font-medium">Normal (Q1)</span> — les consommables n'existent qu'en qualité normale</span>
+                <span className="text-gray-700">·</span>
+                <span>Les consommables <span className="text-gray-500">n'affectent pas</span> l'IP du personnage</span>
+              </>)}
             </div>
 
           </div>

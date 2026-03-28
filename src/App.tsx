@@ -271,7 +271,7 @@ export default function App() {
               {activeTab === 'ip-cible' && (<>
                 <span>Entre l'<span className="text-albion-gold font-medium">IP moyen cible</span> et l'algo trouve la combo tier·enchant la moins chère pour l'atteindre</span>
                 <span className="text-gray-700">·</span>
-                <span>Bag &amp; cape <span className="text-gray-500">ne comptent pas</span> dans l'IP moyen — laissés au moins cher</span>
+                <span>Le <span className="text-gray-500">bag</span> ne compte pas dans l'IP moyen — laissé au moins cher</span>
                 <span className="text-gray-700">·</span>
                 <span>Optimisation basée sur les prix disponibles — saisir des prix manquants dans <span className="text-gray-500 underline underline-offset-2 decoration-dotted">Analyse des coûts</span> améliore les résultats</span>
               </>)}

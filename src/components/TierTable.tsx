@@ -242,7 +242,7 @@ export default function TierTable({ result, lang, priceOverrides, onPriceOverrid
             {/* Mats per enchant step */}
             {totalMat > 0 && (
               <tr className="border-t border-albion-border/30 bg-albion-dark/40">
-                <td className="px-3 py-1.5 text-gray-600 text-[10px]">Mats craft</td>
+                <td className="px-3 py-1.5 text-gray-600 text-[10px]">Mats enchant</td>
                 <td className="px-2 py-1.5 border-l border-albion-border" />
                 {/* .0 — no mats */}
                 <td className="px-2 py-1.5 border-l border-albion-border" />

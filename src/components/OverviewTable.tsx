@@ -50,7 +50,7 @@ export default function OverviewTable({ tierResults }: Props) {
     <div className="bg-albion-card border border-albion-border rounded-lg overflow-hidden">
       <div className="px-4 py-2 bg-albion-dark border-b border-albion-border">
         <span className="text-albion-gold font-bold text-sm">Vue d'ensemble</span>
-        <span className="ml-2 text-gray-500 text-xs">Coût du full set · meilleur prix direct ou craft</span>
+        <span className="ml-2 text-gray-500 text-xs">Coût du full set · meilleur prix direct ou enchant</span>
       </div>
 
       <div className="overflow-x-auto">
@@ -89,7 +89,7 @@ export default function OverviewTable({ tierResults }: Props) {
                             {fmt(c.best)}
                           </span>
                           {c.craftBetter ? (
-                            <span className="text-green-500 text-[9px] leading-none">craft</span>
+                            <span className="text-green-500 text-[9px] leading-none">enchant</span>
                           ) : c.craft > 0 && c.market > 0 ? (
                             <span className="text-gray-600 text-[9px] leading-none">direct</span>
                           ) : null}
@@ -107,7 +107,7 @@ export default function OverviewTable({ tierResults }: Props) {
       </div>
 
       <div className="px-4 py-1.5 border-t border-albion-border/30 bg-albion-dark/40 flex items-center gap-4 text-[10px] text-gray-600">
-        <span><span className="text-green-500">craft</span> = acheter le .0 et enchanter coûte moins cher</span>
+        <span><span className="text-green-500">enchant</span> = acheter le .0 et enchanter coûte moins cher</span>
         <span><span className="text-gray-500">direct</span> = acheter l'item déjà enchanté est préférable</span>
       </div>
     </div>

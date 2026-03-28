@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { GlobalSettings, SelectedItems, SlotId } from './types';
 import { collectItemIds, buildItemId } from './utils/itemIds';
 import { calcAllTiers } from './utils/calculations';
@@ -10,7 +10,7 @@ import TierTable from './components/TierTable';
 import OverviewTable from './components/OverviewTable';
 import IPTargetTab from './components/IPTargetTab';
 
-type TabId = 'build' | 'resultats' | 'ip-cible' | 'consommables';
+type TabId = 'resultats' | 'ip-cible' | 'consommables';
 
 const STORAGE_KEY = 'albion-refine-session';
 
@@ -50,14 +50,7 @@ export default function App() {
   const [selectedItems, setSelectedItems] = useState<SelectedItems>(saved?.selectedItems ?? {});
   const [specLevels, setSpecLevels] = useState<Partial<Record<SlotId, number>>>(saved?.specLevels ?? {});
   const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>(saved?.priceOverrides ?? {});
-  const [activeTab, setActiveTab] = useState<TabId>(() => {
-    const savedItems = (saved?.selectedItems ?? {}) as Record<string, string | undefined>;
-    const hasEquip = Object.keys(savedItems).some(
-      (k) => !CONSUMABLE_SLOT_IDS.includes(k as SlotId) && savedItems[k],
-    );
-    return hasEquip ? 'resultats' : 'build';
-  });
-  const prevHasEquipRef = useRef(false);
+  const [activeTab, setActiveTab] = useState<TabId>('resultats');
 
   // Persist session to localStorage on every relevant change
   useEffect(() => {
@@ -145,27 +138,20 @@ export default function App() {
   );
   const hasItems = Object.keys(selectedItems).some((k) => selectedItems[k as SlotId]);
 
-  const tabs: { id: TabId; icon: string; label: string }[] = [
-    { id: 'build', icon: '⚙', label: 'Configuration' },
+  const tabs: { id: TabId; label: string }[] = [
     ...(hasEquipment ? [
-      { id: 'resultats' as TabId, icon: '📊', label: 'Analyse des coûts' },
-      { id: 'ip-cible' as TabId, icon: '🎯', label: 'Objectif IP' },
+      { id: 'resultats' as TabId, label: 'Analyse des coûts' },
+      { id: 'ip-cible' as TabId, label: 'Objectif IP' },
     ] : []),
     ...(consumableSlots.length > 0 ? [
-      { id: 'consommables' as TabId, icon: '🍖', label: 'Consommables' },
+      { id: 'consommables' as TabId, label: 'Consommables' },
     ] : []),
   ];
 
-  // Auto-switch to Analyse when equipment is first configured
+  // Drop back to first tab if the active tab becomes unavailable
   useEffect(() => {
-    if (!prevHasEquipRef.current && hasEquipment) setActiveTab('resultats');
-    prevHasEquipRef.current = hasEquipment;
-  }, [hasEquipment]);
-
-  // Drop back to Build if the active tab becomes unavailable
-  useEffect(() => {
-    if ((activeTab === 'resultats' || activeTab === 'ip-cible') && !hasEquipment) setActiveTab('build');
-    if (activeTab === 'consommables' && consumableSlots.length === 0) setActiveTab('build');
+    if ((activeTab === 'ip-cible') && !hasEquipment) setActiveTab('resultats');
+    if (activeTab === 'consommables' && consumableSlots.length === 0) setActiveTab('resultats');
   }, [activeTab, hasEquipment, consumableSlots.length]);
 
   return (
@@ -220,56 +206,70 @@ export default function App() {
         )}
       </header>
 
-      {/* Settings bar + Tab navigation */}
+      {/* Settings bar */}
       <div className="border-b border-albion-border bg-albion-dark/80 sticky top-0 z-10">
         <div className="max-w-[1600px] mx-auto">
           <GlobalSettingsBar settings={settings} onChange={setSettings} />
-          <nav className="flex gap-0.5 px-4">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-all ${
-                  activeTab === tab.id
-                    ? 'border-albion-gold text-albion-gold'
-                    : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-albion-border'
-                }`}
-              >
-                <span>{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </nav>
         </div>
       </div>
 
-      {/* Tab content */}
-      <div className="max-w-[1600px] mx-auto px-4 py-4">
+      <div className="max-w-[1600px] mx-auto px-4 py-4 space-y-4">
 
-        {/* ⚙ Configuration */}
-        {activeTab === 'build' && (
-          <section>
-            <div className="flex justify-center">
-              <BuildConfig
-                selected={selectedItems}
-                is2H={is2H}
-                specLevels={specLevels}
-                lang={settings.lang}
-                onChange={handleItemChange}
-                onSpecChange={handleSpecChange}
-              />
-            </div>
-            {!hasItems && (
-              <div className="text-center py-16 text-gray-600">
-                <div className="text-4xl mb-3">⚔</div>
-                <p className="text-sm">Clique sur un slot pour sélectionner tes items</p>
-              </div>
-            )}
-          </section>
+        {/* Build config — always visible */}
+        <div className="flex justify-center">
+          <BuildConfig
+            selected={selectedItems}
+            is2H={is2H}
+            specLevels={specLevels}
+            lang={settings.lang}
+            onChange={handleItemChange}
+            onSpecChange={handleSpecChange}
+          />
+        </div>
+
+        {!hasItems && (
+          <div className="text-center py-12 text-gray-600">
+            <div className="text-4xl mb-3">⚔</div>
+            <p className="text-sm">Clique sur un slot pour sélectionner tes items</p>
+          </div>
         )}
 
+        {/* Tab bar — centered, modern */}
+        {(hasEquipment || consumableSlots.length > 0) && (
+          <div className="flex flex-col items-center gap-3">
+            {/* Help tooltip row */}
+            <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-gray-600">
+              <span><span className="text-green-500 font-medium">enchant</span> = acheter le .0 et enchanter coûte moins cher</span>
+              <span className="text-gray-700">·</span>
+              <span><span className="text-gray-400 font-medium">direct</span> = acheter l'item déjà enchanté est préférable</span>
+              <span className="text-gray-700">·</span>
+              <span><span className="text-yellow-600">↓</span> = qualité indisponible, prix d'une qualité inférieure utilisé</span>
+              <span className="text-gray-700">·</span>
+              <span>Prix manquant ? <span className="text-gray-400">clic sur le prix</span> dans les détails pour le saisir manuellement</span>
+            </div>
+
+            {/* Tab pills */}
+            <nav className="flex items-center gap-1 bg-albion-dark/60 border border-albion-border rounded-full px-1.5 py-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-albion-gold/15 text-albion-gold border border-albion-gold/30'
+                      : 'text-gray-500 hover:text-gray-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        )}
+
+        {/* Tab content */}
         {/* 📊 Analyse des coûts */}
-        {activeTab === 'resultats' && (
+        {activeTab === 'resultats' && hasEquipment && (
           <section className="space-y-3">
             {isLoading ? (
               <div className="text-center py-12 text-gray-500">

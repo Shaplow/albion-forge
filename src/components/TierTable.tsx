@@ -87,7 +87,7 @@ export default function TierTable({ result, lang, priceOverrides, onPriceOverrid
         title="Clic pour saisir un prix manuellement"
       >
         {e.qualityFallback && !isOverride && (
-          <span className="text-gray-600 mr-0.5" title="Prix d'une qualité inférieure (données insuffisantes)">~</span>
+          <span className="text-yellow-600/80 mr-0.5 text-[10px] leading-none" title="Qualité demandée indisponible — prix d'une qualité inférieure utilisé">↓</span>
         )}
         {fmt(displayPrice)}
         {isOverride && (

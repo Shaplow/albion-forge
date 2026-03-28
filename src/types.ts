@@ -24,7 +24,6 @@ export interface GlobalSettings {
   lang: 'en' | 'fr';
   mastery: number;    // 0-100, default 100
   quality: 1 | 2 | 3 | 4 | 5;
-  otherSpecBonus: number;
 }
 
 export type SelectedItems = Partial<Record<SlotId, string>>;

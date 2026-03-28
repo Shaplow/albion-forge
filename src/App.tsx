@@ -28,7 +28,7 @@ const DEFAULT_SETTINGS: GlobalSettings = {
   lang: 'en',
   mastery: 100,
   quality: 1,
-  otherSpecBonus: 0,
+
 };
 
 function fmt(n: number): string {
@@ -125,8 +125,8 @@ export default function App() {
   };
 
   const tierResults = useMemo(
-    () => calcAllTiers(selectedItems, is2H, settings.mastery, settings.quality, specLevels, effectivePrices, settings.otherSpecBonus, otherSpecBonuses, qualityFallbackIds),
-    [selectedItems, is2H, settings.mastery, settings.quality, specLevels, effectivePrices, settings.otherSpecBonus, otherSpecBonuses, qualityFallbackIds],
+    () => calcAllTiers(selectedItems, is2H, settings.mastery, settings.quality, specLevels, effectivePrices, 0, otherSpecBonuses, qualityFallbackIds),
+    [selectedItems, is2H, settings.mastery, settings.quality, specLevels, effectivePrices, otherSpecBonuses, qualityFallbackIds],
   );
 
   // Consumables: single price lookup (full IDs like T5_MEAL_OMELETTE)
@@ -233,7 +233,6 @@ export default function App() {
             is2H={is2H}
             specLevels={specLevels}
             otherSpecBonuses={otherSpecBonuses}
-            globalOtherSpec={settings.otherSpecBonus}
             lang={settings.lang}
             onChange={handleItemChange}
             onSpecChange={handleSpecChange}

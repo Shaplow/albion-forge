@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { SlotId, SelectedItems } from '../types';
 import { SLOT_MAP } from '../constants/slots';
 import { itemLabel } from '../i18n/fr';
+import { getCrossMultiplier } from '../utils/calculations';
 import ItemPicker from './ItemPicker';
 
 const RENDER_BASE = 'https://render.albiononline.com/v1/item';
@@ -25,12 +26,14 @@ interface SpecSliderProps {
   onChange: (v: number) => void;
   crossSpec: number | undefined;
   onCrossSpecChange: (v: number | undefined) => void;
-  globalCrossSpec: number;
+  itemId: string;
   onClose: () => void;
 }
 
-function SpecSlider({ spec, onChange, crossSpec, onCrossSpecChange, globalCrossSpec, onClose }: SpecSliderProps) {
+function SpecSlider({ spec, onChange, crossSpec, onCrossSpecChange, itemId, onClose }: SpecSliderProps) {
   const ref = useRef<HTMLDivElement>(null);
+
+  const [openUpward, setOpenUpward] = useState(true);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -40,17 +43,37 @@ function SpecSlider({ spec, onChange, crossSpec, onCrossSpecChange, globalCrossS
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
 
+  useEffect(() => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    if (rect.top < 0) setOpenUpward(false);
+  }, []);
+
   return (
     <div
       ref={ref}
-      className="absolute z-20 bottom-full mb-2 left-1/2 -translate-x-1/2 bg-albion-card border border-albion-border rounded-lg shadow-2xl"
+      className={`absolute z-20 left-1/2 -translate-x-1/2 bg-albion-card border border-albion-border rounded-lg shadow-2xl ${openUpward ? 'bottom-full mb-2' : 'top-full mt-2'}`}
       style={{ width: 160, padding: '10px 12px' }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-[10px] text-gray-400 uppercase tracking-wide">Spécialisation</span>
-        <span className="text-albion-gold font-bold text-sm">{spec}</span>
-      </div>
+      {/* Header: spec value + cross contribution of this item */}
+      {(() => {
+        const mult = getCrossMultiplier(itemId);
+        const crossContrib = Math.floor(spec * mult);
+        const multLabel = mult === 0.025 ? 'cristal ×0.025' : mult === 0.1 ? 'artefact ×0.1' : 'base ×0.2';
+        return (
+          <>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wide">Spécialisation</span>
+              <span className="text-albion-gold font-bold text-sm">{spec}</span>
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[9px] text-gray-500" title="Contribution de cet item aux autres items de la branche (sert à calculer le Spec croisé des autres)">Apport cross ({multLabel})</span>
+              <span className="text-[10px] text-cyan-400 font-semibold">{crossContrib}</span>
+            </div>
+          </>
+        );
+      })()}
       <input
         type="range"
         min={0}
@@ -83,7 +106,7 @@ function SpecSlider({ spec, onChange, crossSpec, onCrossSpecChange, globalCrossS
           type="number"
           min={0}
           value={crossSpec ?? ''}
-          placeholder={`${globalCrossSpec} (global)`}
+          placeholder="0"
           onChange={(e) => {
             const v = e.target.value === '' ? undefined : Math.max(0, Number(e.target.value));
             onCrossSpecChange(v);
@@ -104,14 +127,13 @@ interface SlotCardProps {
   is2H: boolean;
   spec: number;
   crossSpec: number | undefined;
-  globalCrossSpec: number;
   lang: 'en' | 'fr';
   onOpenPicker: (slotId: SlotId) => void;
   onSpecChange: (spec: number) => void;
   onCrossSpecChange: (v: number | undefined) => void;
 }
 
-function SlotCard({ slotId, selected, is2H, spec, crossSpec, globalCrossSpec, lang, onOpenPicker, onSpecChange, onCrossSpecChange }: SlotCardProps) {
+function SlotCard({ slotId, selected, is2H, spec, crossSpec, lang, onOpenPicker, onSpecChange, onCrossSpecChange }: SlotCardProps) {
   const [tierIdx, setTierIdx] = useState(0);
   const [imgFailed, setImgFailed] = useState(false);
   const [showSlider, setShowSlider] = useState(false);
@@ -145,7 +167,7 @@ function SlotCard({ slotId, selected, is2H, spec, crossSpec, globalCrossSpec, la
           onChange={onSpecChange}
           crossSpec={crossSpec}
           onCrossSpecChange={onCrossSpecChange}
-          globalCrossSpec={globalCrossSpec}
+          itemId={selectedId}
           onClose={() => setShowSlider(false)}
         />
       )}
@@ -253,7 +275,7 @@ function SlotCard({ slotId, selected, is2H, spec, crossSpec, globalCrossSpec, la
       {hasItem && !isConsumable && isCombatSlot && (
         <button
           onClick={(e) => { e.stopPropagation(); setShowSlider((v) => !v); }}
-          title={`Spéc: ${spec} / Cross: ${crossSpec !== undefined ? crossSpec : `${globalCrossSpec} (global)`} — cliquer pour modifier`}
+          title={`Spéc: ${spec} / Cross: ${crossSpec ?? 0} — cliquer pour modifier`}
           className="absolute bottom-[22px] left-0.5 text-[9px] font-bold px-1 py-0.5 rounded-sm transition-colors hover:text-white"
           style={{ color: crossSpec !== undefined ? '#c8a84b' : '#6b7280', background: 'rgba(0,0,0,0.75)' }}
         >
@@ -283,14 +305,13 @@ interface Props {
   is2H: boolean;
   specLevels: Partial<Record<SlotId, number>>;
   otherSpecBonuses: Partial<Record<SlotId, number>>;
-  globalOtherSpec: number;
   lang: 'en' | 'fr';
   onChange: (slotId: SlotId, itemId: string) => void;
   onSpecChange: (slotId: SlotId, spec: number) => void;
   onOtherSpecChange: (slotId: SlotId, v: number | undefined) => void;
 }
 
-export default function BuildConfig({ selected, is2H, specLevels, otherSpecBonuses, globalOtherSpec, lang, onChange, onSpecChange, onOtherSpecChange }: Props) {
+export default function BuildConfig({ selected, is2H, specLevels, otherSpecBonuses, lang, onChange, onSpecChange, onOtherSpecChange }: Props) {
   const [pickerSlot, setPickerSlot] = useState<SlotId | null>(null);
 
   return (
@@ -310,7 +331,6 @@ export default function BuildConfig({ selected, is2H, specLevels, otherSpecBonus
               is2H={is2H}
               spec={specLevels[slotId] ?? 100}
               crossSpec={otherSpecBonuses[slotId]}
-              globalCrossSpec={globalOtherSpec}
               lang={lang}
               onOpenPicker={setPickerSlot}
               onSpecChange={(v) => onSpecChange(slotId, v)}

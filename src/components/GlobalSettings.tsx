@@ -73,24 +73,6 @@ export default function GlobalSettingsBar({ settings, onChange }: Props) {
         />
       </div>
 
-      {/* Other spec bonus */}
-      <div className="flex items-center gap-2">
-        <label
-          className="text-xs text-gray-400 uppercase tracking-wide"
-          title="Valeur par défaut appliquée à tous les slots combat. Pour un slot spécifique (ex: arme dans une sous-branche différente), clique sur le badge de spé du slot pour définir sa propre valeur. La valeur à entrer est la somme des contributions brutes affichées dans le destiny board pour chaque nœud des autres items de ta branche."
-        >
-          Spec croisé (défaut)
-        </label>
-        <input
-          type="number"
-          min={0}
-          step={0.1}
-          value={settings.otherSpecBonus}
-          onChange={(e) => set('otherSpecBonus', Math.max(0, Number(e.target.value)))}
-          className="w-20 bg-albion-dark border border-albion-border text-gray-100 text-sm rounded px-2 py-1 text-center focus:outline-none focus:border-albion-gold"
-        />
-      </div>
-
     </div>
   );
 }

@@ -34,12 +34,30 @@ export const QUALITY_LABELS: Record<number, string> = {
 // ─── IP Formula ───────────────────────────────────────────────────────────────
 
 /**
+ * Returns the cross-spec multiplier for an item based on its ID suffix.
+ * Regular items → ×0.2 | Artifacts (_MORGANA, _KEEPER, _HELL, _UNDEAD, _FEY, _AVALON, _ROYAL) → ×0.1 | Crystal → ×0.025
+ */
+export function getCrossMultiplier(itemId: string): number {
+  if (itemId.endsWith('_CRYSTAL')) return 0.025;
+  if (
+    itemId.endsWith('_MORGANA') ||
+    itemId.endsWith('_KEEPER') ||
+    itemId.endsWith('_HELL') ||
+    itemId.endsWith('_UNDEAD') ||
+    itemId.endsWith('_FEY') ||
+    itemId.endsWith('_AVALON') ||
+    itemId.endsWith('_ROYAL')
+  ) return 0.1;
+  return 0.2;
+}
+
+/**
  * Compute the spec IP bonus for a given slot.
- * bonusBrut = mastery × 0.2 + spec × 1 + otherSpecBonus
+ * bonusBrut = mastery × 0.2 + spec × 2 + otherSpecBonus
  * final = floor(bonusBrut × TIER_MULTIPLIER[tier])
  */
 export function calcSpecIP(mastery: number, spec: number, tier: Tier, otherSpecBonus = 0): number {
-  const raw = mastery * 0.2 + spec + otherSpecBonus;
+  const raw = mastery * 0.2 + spec * 2 + otherSpecBonus;
   return Math.floor(raw * TIER_MULTIPLIER[tier]);
 }
 

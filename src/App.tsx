@@ -192,9 +192,16 @@ export default function App() {
           <div className="ml-auto flex items-center gap-3">
             {lastUpdated && (
               <span className="text-xs text-gray-500" title="Date de la dernière donnée de marché reçue">
-                {new Date(lastUpdated).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                {' à '}
-                {new Date(lastUpdated).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                {(() => {
+                  const d = new Date(lastUpdated.endsWith('Z') ? lastUpdated : lastUpdated + 'Z');
+                  return (
+                    <>
+                      {d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {' à '}
+                      {d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </>
+                  );
+                })()}
                 {isFallback && (
                   <span className="ml-1 text-yellow-700/70" title="Certains prix viennent du prix min de vente, pas de l'historique"> · prix min</span>
                 )}

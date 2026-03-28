@@ -55,8 +55,15 @@ export default function OverviewTable({ tierResults }: Props) {
         // Market is incomplete — use enchant cost as the reliable figure
         best = t.craft; label = 'enchant'; available = true;
       } else {
-        // Neither complete: show whatever partial data we have with ≈
-        best = t.market || t.craft; label = null; available = false;
+        // Neither complete: show best partial data, still show label for guidance (⚠ badge warns)
+        if (t.market > 0 && t.craft > 0) {
+          if (t.craft <= t.market) { best = t.craft; label = 'enchant'; }
+          else                     { best = t.market; label = 'direct'; }
+        } else {
+          best = t.market || t.craft;
+          label = enchant === 0 ? null : t.craft > 0 ? 'enchant' : t.market > 0 ? 'direct' : null;
+        }
+        available = false;
       }
 
       cells.push({ tier: result.tier, enchant, ip, market: t.market, craft: t.craft, best, label, available, missingMarket: t.missingMarket });
